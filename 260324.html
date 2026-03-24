@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 상반기 플랜 (Persistent Dashboard)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            overflow: hidden; /* 1080p 기준 스크롤 방지 */
+        }
+        /* 체크 시 텍스트 효과 */
+        .task-checkbox:checked + span {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+        /* 커스텀 체크박스 스타일 */
+        .task-checkbox {
+            cursor: pointer;
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 4px;
+            border: 2px solid #cbd5e1;
+            appearance: none;
+            display: grid;
+            place-content: center;
+            transition: all 0.2s;
+        }
+        .task-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .task-checkbox:checked::before {
+            content: "✓";
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        /* Custom scrollbar */
+        .task-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .task-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-6 overflow-hidden">
+    <div class="max-w-[1850px] mx-auto h-full flex flex-col">
+        <!-- Header -->
+        <header class="mb-5 flex justify-between items-start">
+            <div>
+                <div class="inline-block bg-slate-800 text-white rounded-full px-3 py-0.5 text-[10px] font-medium mb-2 uppercase tracking-widest">
+                    2026 First Half Integrated Roadmap 💗🖤
+                </div>
+                <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">
+                    2026 상반기 플랜 <span class="text-blue-600">Dashboard</span>
+                </h1>
+                <p id="today-display" class="text-sm text-slate-500 mt-1 italic"></p>
+            </div>
+            
+            <!-- Dynamic D-Day Section -->
+            <div id="dday-container" class="flex gap-2 flex-wrap justify-end max-w-[900px]">
+                <!-- D-Day items will be injected here -->
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <div id="timeline-grid" class="grid grid-cols-4 grid-rows-3 gap-4 flex-1 overflow-hidden">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <!-- Footer / Legend -->
+        <footer class="mt-5 flex justify-between items-center bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase">시험일</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-blue-400"></div>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase">자격증</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-purple-400"></div>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase">졸업과제</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    <span class="text-[10px] font-bold text-slate-600 uppercase">전공시험</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="clearStorage()" class="text-[10px] text-red-400 hover:text-red-600 font-bold uppercase transition-colors">기록 초기화</button>
+                <div class="text-[10px] text-slate-400 font-medium border-l pl-4">
+                    © 2026 상반기 목표 플랜 | AUTO-SAVE ENABLED | 1920x1080 OPTIMIZED
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 현재 날짜 자동 설정
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 상단 날짜 표시 업데이트
+        const todayDisplay = document.getElementById('today-display');
+        todayDisplay.innerText = `Today: ${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+
+        const exams = [
+            { name: "정처산기 실기", date: "2026-04-18" },
+            { name: "전공 중간 (1)", date: "2026-04-21" },
+            { name: "전공 중간 (2)", date: "2026-04-22" },
+            { name: "경영정보 실기", date: "2026-05-02" },
+            { name: "전공 기말고사", date: "2026-06-09" },
+            { name: "리눅스마스터", date: "2026-06-14" }
+        ];
+
+        const scheduleData = [
+            { id: "step1", period: "03.25 - 04.10", goal: "정처산기 기초 & 졸과", tasks: ["C, Java, Python 문법 숙달", "SQL 쿼리 및 DB 이해", "졸업 과제 기획안 작성"], type: "cert", icon: "laptop" },
+            { id: "step2", period: "04.11 - 04.17", goal: "정처산기 최종 스퍼트", tasks: ["최신 기출 5개년 무한 반복", "오답 노트 및 핵심어 암기"], type: "urgent", icon: "flame" },
+            { id: "step3", period: "04.18 (토)", goal: "정보처리산업기사 실기", tasks: ["시험 당일 컨디션 조절", "주관식 답안 정확성 검토"], type: "exam", icon: "star" },
+            { id: "step4", period: "04.19 - 04.20", goal: "중간고사 집중 대비", tasks: ["임베디드 회로도 정밀 분석", "AI 머신비전 알고리즘 복습"], type: "university", icon: "book-open" },
+            { id: "step5", period: "04.21 (화)", goal: "전공 중간고사 (1)", tasks: ["임베디드 시스템 시험 응시", "AI 머신비전 시험 응시"], type: "exam", icon: "check-circle" },
+            { id: "step6", period: "04.22 (수)", goal: "전공 중간고사 (2)", tasks: ["리눅스 우분투 ROS2 시험"], type: "exam", icon: "check-circle" },
+            { id: "step7", period: "04.23 - 04.30", goal: "야간 수업 & 경영정보", tasks: ["밤 10시 종료 일정 적응", "시각화 툴 기본 조작 실습"], type: "night", icon: "moon" },
+            { id: "step8", period: "05.02 (토)", goal: "경영정보시각화 실기", tasks: ["경영정보시각화 시험 당일", "차트 구성 및 대시보드 완성"], type: "exam", icon: "star" },
+            { id: "step9", period: "05.03 - 05.31", goal: "졸과 구현 & 리눅스", tasks: ["졸업 과제 핵심 기능 구현", "리눅스 명령어 자투리 암기"], type: "project", icon: "code" },
+            { id: "step10", period: "06.01 - 06.08", goal: "기말고사 대비", tasks: ["기말 과목 핵심 요약 정리", "졸업 과제 1차 완성 보고"], type: "university", icon: "graduation-cap" },
+            { id: "step11", period: "06.09 - 06.10", goal: "전공 기말고사", tasks: ["전공 과목 기말 시험 기간"], type: "exam", icon: "award" },
+            { id: "step12", period: "06.14 (일)", goal: "리눅스마스터 2급 2차", tasks: ["리눅스 실기 시험 당일", "최종 합격 목표 달성"], type: "exam", icon: "trophy" }
+        ];
+
+        // --- 데이터 저장/로드 로직 ---
+        const saveStatus = (id, taskIdx, checked) => {
+            const status = JSON.parse(localStorage.getItem('study_plan_2026') || '{}');
+            if (!status[id]) status[id] = {};
+            status[id][taskIdx] = checked;
+            localStorage.setItem('study_plan_2026', JSON.stringify(status));
+        };
+
+        const loadStatus = (id, taskIdx) => {
+            const status = JSON.parse(localStorage.getItem('study_plan_2026') || '{}');
+            return status[id] && status[id][taskIdx] ? true : false;
+        };
+
+        const clearStorage = () => {
+            if(confirm('정말 모든 공부 기록을 초기화할까?')) {
+                localStorage.removeItem('study_plan_2026');
+                location.reload();
+            }
+        };
+        // -------------------------
+
+        // D-Day 렌더링 함수
+        const renderDDays = () => {
+            const ddayContainer = document.getElementById('dday-container');
+            ddayContainer.innerHTML = '';
+            
+            exams.forEach(exam => {
+                const examDate = new Date(exam.date);
+                examDate.setHours(0, 0, 0, 0);
+                const diffTime = examDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const ddayBox = document.createElement('div');
+                ddayBox.className = "bg-white px-3 py-2 rounded-xl shadow-sm border border-slate-200 text-center min-w-[110px]";
+                
+                let ddayText = diffDays > 0 ? `D-${diffDays}` : (diffDays === 0 ? "D-Day" : "종료");
+                let colorClass = diffDays <= 7 && diffDays >= 0 ? 'text-red-600' : (diffDays < 0 ? 'text-slate-400' : 'text-blue-600');
+
+                ddayBox.innerHTML = `
+                    <p class="text-[9px] text-slate-500 uppercase font-bold tracking-tight mb-0.5 truncate">${exam.name}</p>
+                    <p class="text-sm font-black ${colorClass} leading-none">${ddayText}</p>
+                `;
+                ddayContainer.appendChild(ddayBox);
+            });
+        };
+
+        const getTypeStyles = (type) => {
+            switch (type) {
+                case 'cert': return 'bg-white border-blue-200 hover:border-blue-300 shadow-sm';
+                case 'urgent': return 'bg-red-50 border-red-200 hover:border-red-300';
+                case 'exam': return 'bg-yellow-50 border-yellow-300 shadow-sm';
+                case 'university': return 'bg-green-50 border-green-200';
+                case 'night': return 'bg-indigo-50 border-indigo-200';
+                case 'project': return 'bg-purple-50 border-purple-200';
+                default: return 'bg-white border-slate-200';
+            }
+        };
+
+        const getIconColor = (type) => {
+            switch (type) {
+                case 'cert': return 'text-blue-500';
+                case 'urgent': return 'text-red-500';
+                case 'exam': return 'text-yellow-600';
+                case 'university': return 'text-green-600';
+                case 'night': return 'text-indigo-600';
+                case 'project': return 'text-purple-600';
+                default: return 'text-slate-500';
+            }
+        }
+
+        const renderGrid = () => {
+            const container = document.getElementById('timeline-grid');
+            container.innerHTML = '';
+            
+            scheduleData.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border-2 transition-all flex flex-col justify-between overflow-hidden ${getTypeStyles(item.type)}`;
+                
+                const tasksHtml = item.tasks.map((task, idx) => {
+                    const isChecked = loadStatus(item.id, idx);
+                    return `
+                        <li class="flex items-center gap-2 group cursor-pointer">
+                            <label class="flex items-center gap-2 cursor-pointer w-full">
+                                <input type="checkbox" 
+                                       class="task-checkbox" 
+                                       ${isChecked ? 'checked' : ''} 
+                                       onchange="saveStatus('${item.id}', ${idx}, this.checked)">
+                                <span class="text-xs text-slate-600 font-medium group-hover:text-slate-900 transition-colors">
+                                    ${task}
+                                </span>
+                            </label>
+                        </li>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="overflow-hidden">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[9px] font-black px-2 py-0.5 bg-white/80 rounded-md shadow-sm text-slate-600 uppercase tracking-tight border border-slate-100">
+                                ${item.period}
+                            </span>
+                            <i data-lucide="${item.icon}" class="w-4 h-4 ${getIconColor(item.type)}"></i>
+                        </div>
+                        <h3 class="text-md font-bold text-slate-800 leading-tight mb-3">
+                            ${item.goal}
+                        </h3>
+                        <ul class="space-y-2 task-list">
+                            ${tasksHtml}
+                        </ul>
+                    </div>
+                    ${item.type === 'night' ? `
+                        <div class="mt-3 flex items-center gap-1.5 text-[9px] font-bold text-indigo-600 bg-white/60 w-fit px-2 py-0.5 rounded-lg border border-indigo-100">
+                            <i data-lucide="clock" class="w-3 h-3"></i>
+                            <span>PM 10:00 종료</span>
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        };
+
+        // 초기 실행
+        renderDDays();
+        renderGrid();
+    </script>
+</body>
+</html>
